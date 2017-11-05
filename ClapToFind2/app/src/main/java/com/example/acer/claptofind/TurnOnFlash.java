@@ -11,7 +11,7 @@ public class TurnOnFlash {
 
     public TurnOnFlash(){
         mCamera = Camera.open();
-        //mParams = mCamera.getParameters();
+        mParams = mCamera.getParameters();
     }
     public void blinkFlash(boolean isStart){
         for(int i=0; i< 5; i++){
@@ -33,7 +33,7 @@ public class TurnOnFlash {
     public void turnOn() {
         if (mCamera != null) {
 
-            mParams = mCamera.getParameters();
+            //mParams = mCamera.getParameters();
             mParams.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
             mCamera.setParameters(mParams);
             mCamera.startPreview();
@@ -44,7 +44,7 @@ public class TurnOnFlash {
     public void turnOff() {
 
         if (mCamera != null) {
-            mParams = mCamera.getParameters();
+            //mParams = mCamera.getParameters();
             if (mParams.getFlashMode().equals(Camera.Parameters.FLASH_MODE_TORCH)) {
                 mParams.setFlashMode(Camera.Parameters.FLASH_MODE_OFF);
                 mCamera.setParameters(mParams);
