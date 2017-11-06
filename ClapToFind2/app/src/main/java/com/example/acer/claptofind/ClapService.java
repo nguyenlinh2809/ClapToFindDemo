@@ -6,11 +6,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
 import android.support.annotation.IntDef;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import be.tarsos.dsp.AudioDispatcher;
@@ -32,6 +36,7 @@ public class ClapService extends Service {
     AudioDispatcher audio;
     PercussionOnsetDetector detector;
     Thread mThread;
+
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -45,6 +50,8 @@ public class ClapService extends Service {
         vibration = new Vibration(getApplicationContext());
         turnOnFlash = new TurnOnFlash();
         audio = startListen();
+
+
     }
 
     @Override
@@ -77,7 +84,7 @@ public class ClapService extends Service {
     public AudioDispatcher startListen() {
         AudioDispatcher mDispatcher = AudioDispatcherFactory.fromDefaultMicrophone(22050, 1024, 0);
         double threshold = 8;
-        double sensitivity = 40;
+        double sensitivity = 70;
         PercussionOnsetDetector mPercussionDetector = new PercussionOnsetDetector(22050, 1024,
                 new OnsetHandler() {
 
@@ -126,22 +133,5 @@ public class ClapService extends Service {
         }
     }
 
-    public void showDialog(){
-        AlertDialog.Builder builder = new AlertDialog.Builder(getApplicationContext());
-        builder.setMessage("FOUND ME?");
-        builder.setTitle("Click YES to finish notification");
-        builder.setIcon(android.R.drawable.ic_dialog_alert);
-        builder.setCancelable(false);
-        builder.setNegativeButton("YES", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int i) {
-                stopNotification();
-                audio = startListen();
-                mThread = new Thread(audio);
-                mThread.start();
-            }
-        });
-        builder.show();
 
-    }
 }

@@ -8,6 +8,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Switch;
@@ -17,8 +18,7 @@ import java.util.ArrayList;
 
 
 public class MainActivity extends AppCompatActivity {
-    private static final int CAMERA_CODE = 100;
-    private static final int RECORD_AUDIO_CODE = 101;
+    private static final int PERMISSION_CODE = 5678;
     private static final String CAMERA_PERMISSION = "android.permission.CAMERA";
     private static final String MICROPHONE_PERMISSION = "android.permission.RECORD_AUDIO";
     public static final String IS_START = "is_start";
@@ -47,15 +47,12 @@ public class MainActivity extends AppCompatActivity {
 
     private void addPermission() {
         ArrayList<String> listPermission = new ArrayList<>();
-        ArrayList<Integer> listPermissionCode = new ArrayList<>();
 
         listPermission.add(CAMERA_PERMISSION);
         listPermission.add(MICROPHONE_PERMISSION);
-        listPermissionCode.add(CAMERA_CODE);
-        listPermissionCode.add(RECORD_AUDIO_CODE);
 
-        for(int i=0; i<listPermission.size(); i++){
-            checkPermission(listPermission.get(i), listPermissionCode.get(i));
+        for (int i = 0; i < listPermission.size(); i++) {
+            checkPermission(listPermission.get(i), PERMISSION_CODE);
         }
     }
 
@@ -69,8 +66,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void doStart() {
-        if(isStart == false){
-
+        Log.d("start", "start");
+        if (isStart == false) {
+            addPermission();
             imbtnToggle.setImageResource(R.drawable.image_button_on);
             isStart = true;
             Intent intent = new Intent(MainActivity.this, ClapService.class);
@@ -83,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
             startService(intent);
             Toast.makeText(this, "Service is started!", Toast.LENGTH_SHORT).show();
 
-        }else{
+        } else {
             imbtnToggle.setImageResource(R.drawable.image_button_off);
             isStart = false;
             Intent intent = new Intent(MainActivity.this, ClapService.class);
@@ -109,7 +107,7 @@ public class MainActivity extends AppCompatActivity {
         bundle.putBoolean(SW_FLASH, swFlash.isChecked());
         bundle.putBoolean(SW_VIBRATION, swVibration.isChecked());
         intent.putExtra(BUNDLE, bundle);
-        startService(intent);
+        //startService(intent);
 
     }
 
@@ -121,9 +119,9 @@ public class MainActivity extends AppCompatActivity {
         swFlash.setChecked(setting.getFlashStatus());
         swVibration.setChecked(setting.getVibrationStatus());
         isStart = setting.getIsOnStatus();
-        if(isStart){
+        if (isStart) {
             imbtnToggle.setImageResource(R.drawable.image_button_on);
-        }else imbtnToggle.setImageResource(R.drawable.image_button_off);
+        } else imbtnToggle.setImageResource(R.drawable.image_button_off);
     }
 
     @Override
@@ -132,9 +130,9 @@ public class MainActivity extends AppCompatActivity {
         setting.saveSetting(swRingtone.isChecked(), swFlash.isChecked(), swVibration.isChecked(), isStart);
     }
 
-    public void checkPermission(String permission, int permissionCode){
+    public void checkPermission(String permission, int permissionCode) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if(checkSelfPermission(permission)!= PackageManager.PERMISSION_GRANTED){
+            if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 //Does not have permission
                 requestPermissions(new String[]{permission}, permissionCode);
             }
@@ -144,12 +142,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if(grantResults.length!=0 && (grantResults[0]==PackageManager.PERMISSION_GRANTED)){
+        if (grantResults.length != 0 && (grantResults[0] == PackageManager.PERMISSION_GRANTED) && (requestCode == PERMISSION_CODE)) {
             Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show();
 
-        }else {
+        } else {
             Toast.makeText(this, "This app need permission to run, please restart and accept permission!", Toast.LENGTH_SHORT).show();
-            finish();
+    //        finish();
+            imbtnToggle.setImageResource(R.drawable.image_button_off);
         }
     }
 }
