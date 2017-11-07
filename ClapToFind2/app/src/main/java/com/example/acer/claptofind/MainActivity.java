@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
@@ -39,22 +40,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        //addPermission();
         addControls();
         addEvents();
 
     }
 
-    private void addPermission() {
-        ArrayList<String> listPermission = new ArrayList<>();
-
-        listPermission.add(CAMERA_PERMISSION);
-        listPermission.add(MICROPHONE_PERMISSION);
-
-        for (int i = 0; i < listPermission.size(); i++) {
-            checkPermission(listPermission.get(i), PERMISSION_CODE);
-        }
-    }
 
     private void addEvents() {
         imbtnToggle.setOnClickListener(new View.OnClickListener() {
@@ -63,27 +53,51 @@ public class MainActivity extends AppCompatActivity {
                 doStart();
             }
         });
+        swFlash.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b){
+                    if(checkPermission(CAMERA_PERMISSION)){
+                        return;
+                    }else {
+                        requestPermissions(new String[]{CAMERA_PERMISSION}, PERMISSION_CODE);
+                    }
+                }
+
+            }
+        });
+
     }
 
     private void doStart() {
-        Log.d("start", "start");
-        if (isStart == false) {
-            addPermission();
-            imbtnToggle.setImageResource(R.drawable.image_button_on);
-            isStart = true;
-            Intent intent = new Intent(MainActivity.this, ClapService.class);
-            Bundle bundle = new Bundle();
-            bundle.putBoolean(IS_START, isStart);
-            bundle.putBoolean(SW_RINGTONE, swRingtone.isChecked());
-            bundle.putBoolean(SW_FLASH, swFlash.isChecked());
-            bundle.putBoolean(SW_VIBRATION, swVibration.isChecked());
-            intent.putExtra(BUNDLE, bundle);
-            startService(intent);
-            Toast.makeText(this, "Service is started!", Toast.LENGTH_SHORT).show();
+        if((!swFlash.isChecked()) && (!swRingtone.isChecked()) && (!swVibration.isChecked())){
+            if(!isStart){
+                Toast.makeText(this, "Must be choose one!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+        }
+        if (!isStart) {
+            if(!checkPermission(MICROPHONE_PERMISSION)){
+                requestPermissions(new String[]{MICROPHONE_PERMISSION}, PERMISSION_CODE);
+            }else {
+                isStart = true;
+                imbtnToggle.setImageResource(R.drawable.image_button_on);
+                Intent intent = new Intent(MainActivity.this, ClapService.class);
+                Bundle bundle = new Bundle();
+                bundle.putBoolean(IS_START, isStart);
+                bundle.putBoolean(SW_RINGTONE, swRingtone.isChecked());
+                bundle.putBoolean(SW_FLASH, swFlash.isChecked());
+                bundle.putBoolean(SW_VIBRATION, swVibration.isChecked());
+                intent.putExtra(BUNDLE, bundle);
+                Log.d("service_status", isStart+" "+ swRingtone.isChecked()+" "+swFlash.isChecked()+" "+swVibration.isChecked());
+                startService(intent);
+                Toast.makeText(this, "Service is started!", Toast.LENGTH_SHORT).show();
+            }
 
         } else {
-            imbtnToggle.setImageResource(R.drawable.image_button_off);
             isStart = false;
+            imbtnToggle.setImageResource(R.drawable.image_button_off);
             Intent intent = new Intent(MainActivity.this, ClapService.class);
             stopService(intent);
             Toast.makeText(this, "Service is stopped!", Toast.LENGTH_SHORT).show();
@@ -99,16 +113,6 @@ public class MainActivity extends AppCompatActivity {
         imbtnToggle = (ImageButton) findViewById(R.id.imbtnToggle);
         setting = new ShareReferencesManager(this);
         isStart = setting.getIsOnStatus();
-
-        Intent intent = new Intent(MainActivity.this, ClapService.class);
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(IS_START, isStart);
-        bundle.putBoolean(SW_RINGTONE, swRingtone.isChecked());
-        bundle.putBoolean(SW_FLASH, swFlash.isChecked());
-        bundle.putBoolean(SW_VIBRATION, swVibration.isChecked());
-        intent.putExtra(BUNDLE, bundle);
-        //startService(intent);
-
     }
 
 
@@ -130,13 +134,12 @@ public class MainActivity extends AppCompatActivity {
         setting.saveSetting(swRingtone.isChecked(), swFlash.isChecked(), swVibration.isChecked(), isStart);
     }
 
-    public void checkPermission(String permission, int permissionCode) {
+    public boolean checkPermission(String permission) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                //Does not have permission
-                requestPermissions(new String[]{permission}, permissionCode);
-            }
-        }
+                return false;
+            }else return true;
+        }return true;
     }
 
     @Override
@@ -147,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             Toast.makeText(this, "This app need permission to run, please restart and accept permission!", Toast.LENGTH_SHORT).show();
-    //        finish();
+            isStart = false;
             imbtnToggle.setImageResource(R.drawable.image_button_off);
         }
     }

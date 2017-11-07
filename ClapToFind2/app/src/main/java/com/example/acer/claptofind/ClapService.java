@@ -1,10 +1,15 @@
 package com.example.acer.claptofind;
 
 import android.app.Dialog;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -27,15 +32,15 @@ import be.tarsos.dsp.onsets.PercussionOnsetDetector;
  */
 
 public class ClapService extends Service {
+    NotificationManager notificationManager;
+    public static int NOTIFICATION_ID = 1234;
     boolean isStart, swRingTone, swFlash, swVibration;
-
-    PlayRingtone playRingtone;
-    Vibration vibration;
-    TurnOnFlash turnOnFlash;
 
     AudioDispatcher audio;
     PercussionOnsetDetector detector;
     Thread mThread;
+
+    ConfirmReceiver receiver;
 
     @Nullable
     @Override
@@ -46,11 +51,30 @@ public class ClapService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        playRingtone = new PlayRingtone(getApplicationContext());
-        vibration = new Vibration(getApplicationContext());
-        turnOnFlash = new TurnOnFlash();
         audio = startListen();
 
+        initReceiver();
+    }
+
+    private void initReceiver() {
+        receiver = new ConfirmReceiver();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(NotificationActivity.MY_ACTION);
+        registerReceiver(receiver, intentFilter);
+    }
+
+    public void showNotification(){
+        notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+        Notification.Builder builder = new Notification.Builder(getApplicationContext());
+        builder.setSmallIcon(android.R.drawable.btn_star);
+        builder.setContentText("Clap to find your phone!");
+        builder.setContentTitle("Clap to find");
+
+        Intent intent = new Intent(ClapService.this, MainActivity.class);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getApplicationContext(), NOTIFICATION_ID, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        builder.setContentIntent(pendingIntent);
+
+        notificationManager.notify(NOTIFICATION_ID, builder.build());
 
     }
 
@@ -70,6 +94,7 @@ public class ClapService extends Service {
             }
 
         }
+        showNotification();
 
         return START_REDELIVER_INTENT;
     }
@@ -77,7 +102,8 @@ public class ClapService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //stopListen();
+        unregisterReceiver(receiver);
+        notificationManager.cancel(NOTIFICATION_ID);
     }
 
 
@@ -92,7 +118,15 @@ public class ClapService extends Service {
                     public void handleOnset(double time, double salience) {
                         stopListen();
                         Log.d("Clap", "Clap detected!");
-                        startNotification(swRingTone, swFlash, swVibration);
+                        Intent intent = new Intent(ClapService.this, NotificationActivity.class);
+                        Bundle bundle = new Bundle();
+                        bundle.putBoolean(MainActivity.IS_START, isStart);
+                        bundle.putBoolean(MainActivity.SW_RINGTONE, swRingTone);
+                        bundle.putBoolean(MainActivity.SW_FLASH, swFlash);
+                        bundle.putBoolean(MainActivity.SW_VIBRATION, swVibration);
+                        intent.putExtras(bundle);
+                        //initReceiver();
+                        startActivity(intent);
 
                     }
                 }, sensitivity, threshold);
@@ -114,24 +148,20 @@ public class ClapService extends Service {
         }
     }
 
-    public void startNotification(boolean isRingTone, boolean isFlash, boolean isVibration){
-        if(isRingTone && isStart){
-            playRingtone.playSong();
-        }
-        if(isFlash){
-            turnOnFlash.blinkFlash(isStart);
-        }
-        if(isVibration){
-            vibration.vibrate();
-        }
 
-    }
-    public void stopNotification(){
-        if(isStart==false){
-            playRingtone.stopSong();
-            vibration.stopVibrate();
+    public class ConfirmReceiver extends BroadcastReceiver{
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(intent.getAction().equals(NotificationActivity.MY_ACTION)){
+                boolean recei = intent.getBooleanExtra(NotificationActivity.MY_RECEIVER, false);
+                if(recei){
+                    audio = startListen();
+                    mThread = new Thread(audio);
+                    mThread.start();
+                }
+            }
         }
     }
-
 
 }

@@ -13,13 +13,13 @@ public class TurnOnFlash {
         mCamera = Camera.open();
         mParams = mCamera.getParameters();
     }
-    public void blinkFlash(boolean isStart){
+    /*public void blinkFlash(boolean checkFlash){
         for(int i=0; i< 5; i++){
-            if(isStart==false){
+            if(!checkFlash){
                 turnOff();
                 break;
             }
-            toggleFlashLight();
+            //toggleFlashLight();
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -28,12 +28,10 @@ public class TurnOnFlash {
         }
         turnOff();
     }
-
+*/
 
     public void turnOn() {
         if (mCamera != null) {
-
-            //mParams = mCamera.getParameters();
             mParams.setFlashMode(Camera.Parameters.FLASH_MODE_TORCH);
             mCamera.setParameters(mParams);
             mCamera.startPreview();
@@ -54,11 +52,11 @@ public class TurnOnFlash {
         on = false;
     }
 
-    public void toggleFlashLight() {
+    /*public void toggleFlashLight() {
         if (!on) {
             turnOn();
         } else {
             turnOff();
         }
-    }
+    }*/
 }
