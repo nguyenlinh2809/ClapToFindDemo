@@ -66,7 +66,7 @@ public class ClapService extends Service {
     public void showNotification(){
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         Notification.Builder builder = new Notification.Builder(getApplicationContext());
-        builder.setSmallIcon(android.R.drawable.btn_star);
+        builder.setSmallIcon(android.R.drawable.ic_delete);
         builder.setContentText("Clap to find your phone!");
         builder.setContentTitle("Clap to find");
 

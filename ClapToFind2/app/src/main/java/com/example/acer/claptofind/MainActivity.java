@@ -12,7 +12,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.SeekBar;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -27,10 +29,13 @@ public class MainActivity extends AppCompatActivity {
     public static final String SW_FLASH = "sw_flash";
     public static final String SW_VIBRATION = "sw_vibration";
     public static final String BUNDLE = "bundle";
+    public static final String SENSITIVE = "sensitive";
 
 
     Switch swRingtone, swFlash, swVibration;
     ImageButton imbtnToggle;
+    SeekBar sbSensitive;
+    TextView tvError;
 
     ShareReferencesManager setting;
 
@@ -111,6 +116,8 @@ public class MainActivity extends AppCompatActivity {
         swFlash = (Switch) findViewById(R.id.swFlash);
         swVibration = (Switch) findViewById(R.id.swVibrate);
         imbtnToggle = (ImageButton) findViewById(R.id.imbtnToggle);
+        sbSensitive = (SeekBar) findViewById(R.id.sbSensity);
+        tvError = (TextView) findViewById(R.id.tvError);
         setting = new ShareReferencesManager(this);
         isStart = setting.getIsOnStatus();
     }
